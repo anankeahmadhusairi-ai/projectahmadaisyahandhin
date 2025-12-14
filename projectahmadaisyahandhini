@@ -1,0 +1,213 @@
+#include <iostream>
+#include <vector>
+#include <string>
+using namespace std;
+
+// ================== STRUCT ==================
+struct User {
+    string name;
+    string email;
+    string password;
+    string role; // "admin" atau "user"
+};
+
+struct Product {
+    string name;
+    int price;
+    bool available;
+};
+
+struct Rental {
+    string user;
+    string product;
+    int days;
+    int total;
+};
+
+// ================== GLOBAL DATA ==================
+vector<User> users;
+vector<Product> products;
+vector<Rental> rentals;
+
+// ================== FUNCTION ==================
+void listProducts() {
+    cout << "\n=== DAFTAR PRODUK ===\n";
+    for (int i = 0; i < products.size(); i++) {
+        cout << i + 1 << ". " << products[i].name
+             << " | Rp " << products[i].price << "/hari | "
+             << (products[i].available ? "Tersedia" : "Disewa") << endl;
+    }
+}
+
+// ================== USER ==================
+void registerUser() {
+    User u;
+    cout << "\n=== REGISTER USER ===\n";
+    cout << "Nama: ";
+    cin >> u.name;
+    cout << "Email: ";
+    cin >> u.email;
+    cout << "Password: ";
+    cin >> u.password;
+    u.role = "user";
+
+    users.push_back(u);
+    cout << "Registrasi berhasil!\n";
+}
+
+int login() {
+    string email, password;
+    cout << "\n=== LOGIN ===\n";
+    cout << "Email: ";
+    cin >> email;
+    cout << "Password: ";
+    cin >> password;
+
+    for (int i = 0; i < users.size(); i++) {
+        if (users[i].email == email && users[i].password == password) {
+            cout << "Login berhasil sebagai " << users[i].role << endl;
+            return i;
+        }
+    }
+    cout << "Login gagal!\n";
+    return -1;
+}
+
+void rentProduct(string username) {
+    listProducts();
+    int pilih, hari;
+    cout << "Pilih produk: ";
+    cin >> pilih;
+    pilih--;
+
+    if (pilih < 0 || pilih >= products.size()) {
+        cout << "Pilihan tidak valid!\n";
+        return;
+    }
+
+    if (!products[pilih].available) {
+        cout << "Produk sedang disewa!\n";
+        return;
+    }
+
+    cout << "Berapa hari: ";
+    cin >> hari;
+
+    int total = hari * products[pilih].price;
+    rentals.push_back({username, products[pilih].name, hari, total});
+    products[pilih].available = false;
+
+    cout << "Sewa berhasil! Total: Rp " << total << endl;
+}
+
+void viewRentalHistory(string username) {
+    cout << "\n=== RIWAYAT SEWA ===\n";
+    for (auto &r : rentals) {
+        if (r.user == username) {
+            cout << r.product << " | " << r.days
+                 << " hari | Rp " << r.total << endl;
+        }
+    }
+}
+
+void userMenu(int index) {
+    int pilih;
+    do {
+        cout << "\n=== MENU USER ===\n";
+        cout << "1. Lihat Produk\n";
+        cout << "2. Sewa Produk\n";
+        cout << "3. Riwayat Sewa\n";
+        cout << "4. Logout\n";
+        cout << "Pilih: ";
+        cin >> pilih;
+
+        if (pilih == 1) listProducts();
+        else if (pilih == 2) rentProduct(users[index].name);
+        else if (pilih == 3) viewRentalHistory(users[index].name);
+
+    } while (pilih != 4);
+}
+
+// ================== ADMIN ==================
+void addProduct() {
+    Product p;
+    cout << "\n=== TAMBAH PRODUK ===\n";
+    cout << "Nama: ";
+    cin >> p.name;
+    cout << "Harga/hari: ";
+    cin >> p.price;
+    p.available = true;
+    products.push_back(p);
+    cout << "Produk ditambahkan!\n";
+}
+
+void viewAllRentals() {
+    cout << "\n=== SEMUA DATA SEWA ===\n";
+    for (auto &r : rentals) {
+        cout << "User: " << r.user
+             << " | Produk: " << r.product
+             << " | Hari: " << r.days
+             << " | Total: Rp " << r.total << endl;
+    }
+}
+
+void adminMenu() {
+    int pilih;
+    do {
+        cout << "\n=== MENU ADMIN ===\n";
+        cout << "1. Lihat Produk\n";
+        cout << "2. Tambah Produk\n";
+        cout << "3. Lihat Semua Sewa\n";
+        cout << "4. Logout\n";
+        cout << "Pilih: ";
+        cin >> pilih;
+
+        if (pilih == 1) listProducts();
+        else if (pilih == 2) addProduct();
+        else if (pilih == 3) viewAllRentals();
+
+    } while (pilih != 4);
+}
+
+// ================== MAIN ==================
+int main() {
+    // Admin default
+    users.push_back({"Administrator", "admin", "ahmadaisaandhin", "admin"});
+
+    // Produk default
+    products.push_back({"iPhone 14", 70000, true});
+    products.push_back({"MacBook Air M1", 120000, true});
+    products.push_back({"iPad Pro", 90000, true});
+
+    int menu;
+    while (true) {
+        cout << "\n=== MENU UTAMA ===\n";
+        cout << "1. Register\n";
+        cout << "2. Login\n";
+        cout << "3. Keluar\n";
+        cout << "Pilih: ";
+        cin >> menu;
+
+        if (menu == 1) {
+            registerUser();
+        }
+        else if (menu == 2) {
+            int index = login();
+            if (index != -1) {
+                if (users[index].role == "admin")
+                    adminMenu();
+                else
+                    userMenu(index);
+            }
+        }
+        else if (menu == 3) {
+            cout << "Terima kasih!\n";
+            break;
+        }
+        else {
+            cout << "Pilihan salah!\n";
+        }
+    }
+
+    return 0;
+}
